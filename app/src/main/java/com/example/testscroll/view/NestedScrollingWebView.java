@@ -3,6 +3,7 @@ package com.example.testscroll.view;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -13,7 +14,6 @@ import android.widget.Scroller;
 import androidx.annotation.Nullable;
 import androidx.core.view.NestedScrollingChild2;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.ViewParentCompat;
 
 import com.example.testscroll.util.DimenHelper;
 import com.example.testscroll.util.PtNestedScrollingChildHelper;
@@ -39,8 +39,6 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
     private Scroller mScroller;
     private VelocityTracker mVelocityTracker;
 
-    private boolean canScroll = true;
-
     public NestedScrollingWebView(Context context) {
         this(context, null);
     }
@@ -58,18 +56,6 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
         TOUCH_SLOP = configuration.getScaledTouchSlop();
         DENSITY = context.getResources().getDisplayMetrics().density;
-    }
-
-    public void setCanScroll(boolean canScroll) {
-        this.canScroll = canScroll;
-    }
-
-    @Override
-    protected void onScrollChanged(int l, int t, int oldl, int oldt) {
-        super.onScrollChanged(l, t, oldl, oldt);
-//        if(!canScroll) {
-//            scrollTo(l, 0);
-//        }
     }
 
     /**
@@ -99,6 +85,7 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
 
     public boolean canScrollDown() {
         final int range = getWebViewContentHeight() - getHeight();
+//        Log.d("fox--->", "canScrollDown range:" + range + " offset:" + getScrollY() + " Touch_slop:" + TOUCH_SLOP);
         if (range <= 0) {
             return false;
         }
@@ -137,21 +124,26 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
                 if (!dispatchNestedPreScroll(0, -dy, mScrollConsumed, null)) {
+                    Log.d("fox--->", "move webview: " + -dy);
                     scrollBy(0, -dy);
                 }
-                if (Math.abs(mFirstY - y) > TOUCH_SLOP) {
-                    //屏蔽WebView本身的滑动，滑动事件自己处理
-                    event.setAction(MotionEvent.ACTION_CANCEL);
-                }
+                // todo add placeholder toolbar consume some dy, headache...
+//                if (Math.abs(mFirstY - y) > TOUCH_SLOP) {
+//                    //屏蔽WebView本身的滑动，滑动事件自己处理
+//                    event.setAction(MotionEvent.ACTION_CANCEL);
+//                }
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                if (isParentResetScroll() && mVelocityTracker != null) {
+                if (mVelocityTracker != null) {
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) -mVelocityTracker.getYVelocity();
-                    recycleVelocityTracker();
-                    mIsSelfFling = true;
-                    flingScroll(0, yVelocity);
+//                    if(isParentResetScroll()) {
+                        Log.d("fox--->", "webView fling " + yVelocity);
+                        recycleVelocityTracker();
+                        mIsSelfFling = true;
+                        flingScroll(0, yVelocity);
+//                    }
                 }
                 break;
         }
@@ -180,22 +172,23 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
         if (mScroller.computeScrollOffset()) {
             final int currY = mScroller.getCurrY();
             if (!mIsSelfFling) {
-                // parent flying
+                // parent fling
                 scrollTo(0, currY);
                 invalidate();
                 return;
             }
 
             if (isWebViewCanScroll()) {
+                Log.d("fox--->", "compute scroll currY:" + currY);
                 scrollTo(0, currY);
                 invalidate();
             }
-            if (!mHasFling
-                    && mScroller.getStartY() < currY
-                    && !canScrollDown()
+//            Log.d("fox--->", "mHasFling:" + mHasFling + " mScoller.getStartY():" + mScroller.getStartY()
+//                    + " currY:" + currY + " canScrollDown:" + canScrollDown());
+            if (!mHasFling && mScroller.getStartY() < currY && !canScrollDown()
                     && startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
                     && !dispatchNestedPreFling(0, mScroller.getCurrVelocity())) {
-                //滑动到底部时，将fling传递给父控件和RecyclerView
+                // when fling reach web view bottom, pass this event to parent and recycler
                 mHasFling = true;
                 dispatchNestedFling(0, mScroller.getCurrVelocity(), false);
             }
@@ -270,6 +263,8 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
             initWebViewParent();
         }
         if (mParentView != null) {
+//            Log.d("fox--->", "isParentResetScroll:" + mParentView.getScrollY());
+//            return mParentView.getScrollY() == NestedScrollingDetailContainer.DEFAULT_DISTANCE_PARENT_SCROLL;
             return mParentView.getScrollY() == 0;
         }
         return true;
@@ -323,8 +318,7 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
 
     @Override
     public boolean dispatchNestedFling(float velocityX, float velocityY, boolean consumed) {
-        return ViewParentCompat.onNestedFling(mParentView, this, 0, mScroller.getCurrVelocity(), false);
-//        return getNestedScrollingHelper().dispatchNestedFling(velocityX, velocityY, consumed);
+        return getNestedScrollingHelper().dispatchNestedFling(velocityX, velocityY, consumed);
     }
 
     @Override
