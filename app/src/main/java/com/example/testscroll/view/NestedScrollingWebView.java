@@ -38,7 +38,7 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
     private Scroller mScroller;
     private VelocityTracker mVelocityTracker;
 
-    private boolean canScroll = true;
+    private boolean canScroll;
 
     public NestedScrollingWebView(Context context) {
         this(context, null);
@@ -300,7 +300,8 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
         return getWebViewContentHeight() > getHeight();
     }
 
-    /****** NestedScrollingChild BEGIN ******/
+    /****** NestedScrollingChild2 BEGIN ******/
+
     @Override
     public void setNestedScrollingEnabled(boolean enabled) {
         getNestedScrollingHelper().setNestedScrollingEnabled(enabled);

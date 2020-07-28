@@ -1,12 +1,15 @@
 package com.example.testscroll;
 
+import android.animation.ObjectAnimator;
+import android.content.Context;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -65,15 +68,27 @@ public class MainFragment extends Fragment {
         container.setOnYChangedListener(new NestedScrollingDetailContainer.OnYChangedListener() {
             @Override
             public void onScrollYChanged(int yDiff) {
-                if(Math.abs(yDiff) > DisplayUtils.dp2px(50) * 2) {
-                    containerLayout.setTranslationY(yDiff > 0 ? 0 : -DisplayUtils.dp2px(50));
+                if(Math.abs(yDiff) > DisplayUtils.dp2px(50) / 2) {
+                    if(yDiff > 0) {
+                        if(containerLayout.getTranslationY() == 0) return;
+                        ObjectAnimator.ofFloat(containerLayout, "translationY", -DisplayUtils.dp2px(50), 0).setDuration(200L).start();
+                    } else {
+                        if(containerLayout.getTranslationY() == -DisplayUtils.dp2px(50)) return;
+                        ObjectAnimator.ofFloat(containerLayout, "translationY", 0, -DisplayUtils.dp2px(50)).setDuration(200L).start();
+                    }
                 }
             }
 
             @Override
             public void onFlingYChanged(int yVelocity) {
                 if(Math.abs(yVelocity) > 3000) {
-                    containerLayout.setTranslationY(yVelocity > 0 ? 0 : -DisplayUtils.dp2px(50));
+                    if(yVelocity > 0) {
+                        if(containerLayout.getTranslationY() == 0) return;
+                        ObjectAnimator.ofFloat(containerLayout, "translationY", -DisplayUtils.dp2px(50), 0).setDuration(200L).start();
+                    } else {
+                        if(containerLayout.getTranslationY() == -DisplayUtils.dp2px(50)) return;
+                        ObjectAnimator.ofFloat(containerLayout, "translationY", 0, -DisplayUtils.dp2px(50)).setDuration(200L).start();
+                    }
                 }
             }
         });
@@ -116,17 +131,26 @@ public class MainFragment extends Fragment {
 
     public void onReadMore(View v) {
         final Rect rect = new Rect();
-        v.getGlobalVisibleRect(rect);
-        Log.e("CG", "Read more : " + rect + " " + getResources().getDisplayMetrics().heightPixels
-                + " " + webContainer1.computeVerticalScrollRange()
-                + " " + webContainer1.computeVerticalScrollOffset()
-                + " " + webContainer1.computeVerticalScrollExtent());
+        webContainer1.getGlobalVisibleRect(rect);
+
+        final Rect rect2 = new Rect();
+        container.getGlobalVisibleRect(rect2);
         v.setVisibility(View.GONE);
         // 点击 ReadMore，外层容器滚动到屏幕顶部
         container.scrollTo(0, 0);
 
         // 内部网页向下滚动 WebView 底部到 屏幕底部 的距离，模拟网页展开效果
         webContainer1.setCanScroll(true);
-        webContainer1.scrollTo(0, webContainer1.computeVerticalScrollOffset() + (getResources().getDisplayMetrics().heightPixels - rect.top));
+        webContainer1.scrollTo(0,webContainer1.computeVerticalScrollOffset() + rect2.bottom - rect.bottom);
+    }
+
+    public int getScreenHeight() {
+        WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
+        if (wm == null) {
+            return -1;
+        }
+        Point point = new Point();
+        wm.getDefaultDisplay().getRealSize(point);
+        return point.y;
     }
 }

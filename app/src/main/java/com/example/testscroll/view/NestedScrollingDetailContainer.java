@@ -2,7 +2,6 @@ package com.example.testscroll.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -50,7 +49,6 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
     private VelocityTracker mVelocityTracker;
 
     private OnYChangedListener onYChangedListener;
-    private boolean isScrollDirectionChanged = false;
 
     public interface OnYChangedListener {
         void onScrollYChanged(int yDiff);
@@ -163,7 +161,6 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
                 if (mVelocityTracker != null) {
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     if(onYChangedListener != null) {
-                        Log.d("fox--->", "velocity: " + mVelocityTracker.getYVelocity());
                         onYChangedListener.onFlingYChanged((int)mVelocityTracker.getYVelocity());
                     }
                     if(isParentCenter()) {
@@ -512,17 +509,14 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
     @Override
     public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
         if (target instanceof NestedScrollingWebView) {
-            Log.d("fox--->", "onNestedPreFling NestedScrollingWebView velocityY:" + velocityY);
             // when web view reach bottom, continue scroll down parent and recycler
             mCurFlyingType = FLYING_FROM_WEBVIEW_TO_PARENT;
             parentFling(velocityY);
         } else if (target instanceof RecyclerView && velocityY < 0 && getScrollY() >= getInnerScrollHeight()) {
-            Log.d("fox--->", "onNestedPreFling RecyclerView velocityY:" + velocityY);
             // when recycler reach top, continue scroll parent and web view
             mCurFlyingType = FLYING_FROM_RVLIST_TO_PARENT;
             parentFling(velocityY);
         } else if (target instanceof RecyclerView && velocityY > 0) {
-            Log.d("fox--->", "onNestedPreFling RecyclerView velocityY:" + velocityY);
             mIsRvFlyingDown = true;
         }
 
@@ -536,9 +530,8 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
 
     @Override
     public void onNestedScroll(@NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
-        Log.d("fox--->", "onNestedScroll dyUnconsumed" + dyUnconsumed);
         if (dyUnconsumed < 0) {
-            //RecyclerView向父控件的滑动衔接处
+            // recycler view scroll to parent gap
             scrollBy(0, dyUnconsumed);
         }
     }
