@@ -3,7 +3,6 @@ package com.example.testscroll.view;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -13,10 +12,10 @@ import android.widget.Scroller;
 
 import androidx.annotation.Nullable;
 import androidx.core.view.NestedScrollingChild2;
+import androidx.core.view.NestedScrollingChildHelper;
 import androidx.core.view.ViewCompat;
 
 import com.example.testscroll.util.DimenHelper;
-import com.example.testscroll.util.PtNestedScrollingChildHelper;
 
 public class NestedScrollingWebView extends WebView implements NestedScrollingChild2 {
     private boolean mIsSelfFling;
@@ -34,10 +33,12 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
 
     private final float DENSITY;
 
-    private PtNestedScrollingChildHelper mChildHelper;
+    private NestedScrollingChildHelper mChildHelper;
     private NestedScrollingDetailContainer mParentView;
     private Scroller mScroller;
     private VelocityTracker mVelocityTracker;
+
+    private boolean canScroll = true;
 
     public NestedScrollingWebView(Context context) {
         this(context, null);
@@ -49,7 +50,7 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
 
     public NestedScrollingWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        mChildHelper = new PtNestedScrollingChildHelper(this);
+        mChildHelper = new NestedScrollingChildHelper(this);
         setNestedScrollingEnabled(true);
         mScroller = new Scroller(getContext());
         final ViewConfiguration configuration = ViewConfiguration.get(getContext());
@@ -58,14 +59,18 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
         DENSITY = context.getResources().getDisplayMetrics().density;
     }
 
+    public void setCanScroll(boolean canScroll) {
+        this.canScroll = canScroll;
+    }
+
     /**
-     * 设置JS回调的Web内容高度,解决内部计算不准导致的问题
+     * set web content height from js callback, resolve problem that inner computing result is not accurate
      */
     public void setJsCallWebViewContentHeight(int webViewContentHeight) {
         if (webViewContentHeight > 0 && webViewContentHeight != mJsCallWebViewContentHeight) {
             mJsCallWebViewContentHeight = webViewContentHeight;
             if (mJsCallWebViewContentHeight < getHeight()) {
-                // 内部高度<控件高度时,调整控件高度为内容高度
+                // if inner height < container height, adjust container height to inner height
                 DimenHelper.updateLayout(this, DimenHelper.NOT_CHANGE, mJsCallWebViewContentHeight);
             }
         }
@@ -80,12 +85,17 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
             mWebViewContentHeight = (int) (getContentHeight() * DENSITY);
         }
 
+        if (!canScroll) {
+            // 有 ReadMore 的时候只能滚动 2 屏
+            mWebViewContentHeight = (int) (computeVerticalScrollExtent() * 2);
+        } else {
+            mWebViewContentHeight = (int) (getContentHeight() * DENSITY);
+        }
         return mWebViewContentHeight;
     }
 
     public boolean canScrollDown() {
         final int range = getWebViewContentHeight() - getHeight();
-//        Log.d("fox--->", "canScrollDown range:" + range + " offset:" + getScrollY() + " Touch_slop:" + TOUCH_SLOP);
         if (range <= 0) {
             return false;
         }
@@ -124,26 +134,23 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
                 if (!dispatchNestedPreScroll(0, -dy, mScrollConsumed, null)) {
-                    Log.d("fox--->", "move webview: " + -dy);
                     scrollBy(0, -dy);
                 }
-                // todo add placeholder toolbar consume some dy, headache...
-//                if (Math.abs(mFirstY - y) > TOUCH_SLOP) {
-//                    //屏蔽WebView本身的滑动，滑动事件自己处理
-//                    event.setAction(MotionEvent.ACTION_CANCEL);
-//                }
+                if (Math.abs(mFirstY - y) > TOUCH_SLOP) {
+                    // shielding scroll of web view self, fling event deal by itself
+                    event.setAction(MotionEvent.ACTION_CANCEL);
+                }
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 if (mVelocityTracker != null) {
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) -mVelocityTracker.getYVelocity();
-//                    if(isParentResetScroll()) {
-                        Log.d("fox--->", "webView fling " + yVelocity);
+                    if(isParentResetScroll()) {
                         recycleVelocityTracker();
                         mIsSelfFling = true;
                         flingScroll(0, yVelocity);
-//                    }
+                    }
                 }
                 break;
         }
@@ -179,12 +186,9 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
             }
 
             if (isWebViewCanScroll()) {
-                Log.d("fox--->", "compute scroll currY:" + currY);
                 scrollTo(0, currY);
                 invalidate();
             }
-//            Log.d("fox--->", "mHasFling:" + mHasFling + " mScoller.getStartY():" + mScroller.getStartY()
-//                    + " currY:" + currY + " canScrollDown:" + canScrollDown());
             if (!mHasFling && mScroller.getStartY() < currY && !canScrollDown()
                     && startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
                     && !dispatchNestedPreFling(0, mScroller.getCurrVelocity())) {
@@ -197,6 +201,9 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
 
     @Override
     public void scrollTo(int x, int y) {
+        // update max scrollY for read more scroll
+        mMaxScrollY = getWebViewContentHeight() - getHeight();
+
         if (y < 0) {
             y = 0;
         }
@@ -213,13 +220,28 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
         super.scrollTo(0, y - getHeight());
     }
 
-    private PtNestedScrollingChildHelper getNestedScrollingHelper() {
+    private NestedScrollingChildHelper getNestedScrollingHelper() {
         if (mChildHelper == null) {
-            mChildHelper = new PtNestedScrollingChildHelper(this) {
+            mChildHelper = new NestedScrollingChildHelper(this) {
 
             };
         }
         return mChildHelper;
+    }
+
+    @Override
+    public int computeVerticalScrollRange() {
+        return super.computeVerticalScrollRange();
+    }
+
+    @Override
+    public int computeVerticalScrollOffset() {
+        return super.computeVerticalScrollOffset();
+    }
+
+    @Override
+    public int computeVerticalScrollExtent() {
+        return super.computeVerticalScrollExtent();
     }
 
     private void initOrResetVelocityTracker() {
@@ -263,8 +285,6 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
             initWebViewParent();
         }
         if (mParentView != null) {
-//            Log.d("fox--->", "isParentResetScroll:" + mParentView.getScrollY());
-//            return mParentView.getScrollY() == NestedScrollingDetailContainer.DEFAULT_DISTANCE_PARENT_SCROLL;
             return mParentView.getScrollY() == 0;
         }
         return true;

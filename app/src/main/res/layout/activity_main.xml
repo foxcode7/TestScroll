@@ -1,72 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity">
 
-    <FrameLayout
+    <LinearLayout
+        android:id="@+id/container_layout"
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <com.example.testscroll.view.NestedScrollingDetailContainer
-            android:id="@+id/nested_container"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <View
-                android:id="@+id/placeholder_toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"/>
-
-            <TextView
-                android:text="Banner Ads"
-                android:textColor="#fff"
-                android:background="#734900"
-                android:gravity="center"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"/>
-
-            <com.example.testscroll.WebViewPager
-                android:id="@+id/view_pager"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@color/colorAccent"
-                android:gravity="center"
-                android:text="Read More"
-                android:textSize="20dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="#f9f"
-                android:gravity="center"
-                android:text="Like and Share"
-                android:textSize="20dp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:tag="nested_scroll_recycler_view" />
-
-        </com.example.testscroll.view.NestedScrollingDetailContainer>
+        android:layout_height="match_parent">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="@color/colorPrimary"
-            app:contentInsetEnd="0dp"
-            app:contentInsetStart="0dp">
+            app:contentInsetStart="0dp"
+            app:contentInsetEnd="0dp">
 
             <TextView
                 android:text="Title Bar"
@@ -74,20 +25,41 @@
                 android:textColor="#fff"
                 android:background="#c76"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"/>
+                android:layout_height="match_parent"/>
 
         </androidx.appcompat.widget.Toolbar>
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right|bottom"
-            android:layout_marginBottom="20dp"
-            android:layout_marginRight="20dp"/>
+        <TextView
+            android:text="Banner Ads"
+            android:textColor="#fff"
+            android:background="#734900"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"/>
 
-    </FrameLayout>
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <FrameLayout
+                android:id="@+id/frame_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginRight="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/textView"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
+        app:layout_constraintBottom_toBottomOf="parent"
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="50dp"
@@ -96,4 +68,4 @@
         android:text="Comment Bar"
         android:textColor="#fff" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

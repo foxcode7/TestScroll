@@ -14,19 +14,15 @@ import android.widget.Scroller;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.NestedScrollingParent2;
+import androidx.core.view.NestedScrollingParentHelper;
 import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.testscroll.util.DisplayUtils;
-import com.example.testscroll.util.PtNestedScrollingParentHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class NestedScrollingDetailContainer extends ViewGroup implements NestedScrollingParent2 {
-    public static final int DEFAULT_DISTANCE_PARENT_SCROLL = DisplayUtils.dp2px(50);
-
     public static final String TAG_NESTED_SCROLL_WEB_VIEW = "nested_scroll_web_view";
     public static final String TAG_NESTED_SCROLL_RECYCLER_VIEW = "nested_scroll_recycler_view";
 
@@ -49,14 +45,15 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
     private NestedScrollingWebView mChildWebView;
     private RecyclerView mChildRecyclerView;
 
-    private PtNestedScrollingParentHelper mParentHelper;
+    private NestedScrollingParentHelper mParentHelper;
     private Scroller mScroller;
     private VelocityTracker mVelocityTracker;
 
     private OnYChangedListener onYChangedListener;
+    private boolean isScrollDirectionChanged = false;
 
     public interface OnYChangedListener {
-        void onScrollYChanged(boolean isMoveOver, int yDiff);
+        void onScrollYChanged(int yDiff);
 
         void onFlingYChanged(int yVelocity);
     }
@@ -75,7 +72,7 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
 
     public NestedScrollingDetailContainer(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mParentHelper = new PtNestedScrollingParentHelper(this);
+        mParentHelper = new NestedScrollingParentHelper(this);
         mScroller = new Scroller(getContext());
         ViewConfiguration viewConfiguration = ViewConfiguration.get(getContext());
         mMaximumVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
@@ -149,11 +146,11 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
                 mIsRvFlyingDown = false;
                 initOrResetVelocityTracker();
                 resetScroller();
-//                dealWithError();
+                dealWithError();
                 break;
             case MotionEvent.ACTION_MOVE:
                 if(onYChangedListener != null) {
-                    onYChangedListener.onScrollYChanged(false, (int)ev.getY() - lastDownY);
+                    onYChangedListener.onScrollYChanged((int)ev.getY() - lastDownY);
                 }
                 initVelocityTrackerIfNotExists();
                 mVelocityTracker.addMovement(ev);
@@ -161,16 +158,16 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 if(onYChangedListener != null) {
-                    onYChangedListener.onScrollYChanged(true, (int)ev.getY() - lastDownY);
+                    onYChangedListener.onScrollYChanged((int)ev.getY() - lastDownY);
                 }
                 if (mVelocityTracker != null) {
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     if(onYChangedListener != null) {
+                        Log.d("fox--->", "velocity: " + mVelocityTracker.getYVelocity());
                         onYChangedListener.onFlingYChanged((int)mVelocityTracker.getYVelocity());
                     }
                     if(isParentCenter()) {
-                        Log.d("fox--->", "dispatchTouchEvent parent fling " + getScrollY() + " " + getInnerScrollHeight());
-                        //处理连接处的父控件fling事件
+                        // deal parent center fling
                         int yVelocity = (int) -mVelocityTracker.getYVelocity();
                         mCurFlyingType = yVelocity > 0 ? FLYING_FROM_WEBVIEW_TO_PARENT : FLYING_FROM_PARENT_TO_WEBVIEW;
                         recycleVelocityTracker();
@@ -212,13 +209,11 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
         final int action = ev.getAction();
         switch (action & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_MOVE:
-                Log.d("fox--->", "onInterceptTouchEvent0" + " move");
                 // intercept move event what fails in a non-sliding subview
                 final int y = (int) ev.getY();
                 final int yDiff = Math.abs(y - mLastMotionY);
                 boolean isInNestedChildViewArea = isTouchNestedInnerView((int)ev.getRawX(), (int)ev.getRawY());
                 if (yDiff > TOUCH_SLOP && !isInNestedChildViewArea) {
-                    Log.d("fox--->", "onInterceptTouchEvent1" + " y:" + y + " yDiff:" + yDiff);
                     mIsBeingDragged = true;
                     mLastMotionY = y;
                     final ViewParent parent = getParent();
@@ -344,9 +339,9 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
         }
     }
 
-    private PtNestedScrollingParentHelper getNestedScrollingHelper() {
+    private NestedScrollingParentHelper getNestedScrollingHelper() {
         if (mParentHelper == null) {
-            mParentHelper = new PtNestedScrollingParentHelper(this);
+            mParentHelper = new NestedScrollingParentHelper(this);
         }
         return mParentHelper;
     }
@@ -438,21 +433,21 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
         }
     }
 
-//    /**
-//     * 处理未知的错误情况
-//     */
-//    private void dealWithError() {
-//        //当父控件有偏移，但是WebView却不在底部时，属于异常情况，进行修复，
-//        //有两种修复方案：1.将WebView手动滑动到底部，2.将父控件的scroll位置重置为0
-//        //目前的测试中没有出现这种异常，此代码作为异常防御
-//        if (isParentCenter() && canWebViewScrollDown()) {
-//            if (getScrollY() > getMeasuredHeight() / 4) {
-//                scrollToWebViewBottom();
-//            } else {
-//                scrollTo(0, 0);
-//            }
-//        }
-//    }
+    /**
+     * deal some unknown error situation
+     */
+    private void dealWithError() {
+        // if parent has position offset and web view not reach bottom, this situation is exception.
+        // two ways to fix: 1. move web view to bottom 2. scroll parent position to 0
+        // This is defensive code
+        if (isParentCenter() && canWebViewScrollDown()) {
+            if (getScrollY() > getMeasuredHeight() / 4) {
+                scrollToWebViewBottom();
+            } else {
+                scrollTo(0, 0);
+            }
+        }
+    }
 
     private void parentFling(float velocityY) {
         mScroller.fling(0, getScrollY(), 0, (int) velocityY, 0, 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
@@ -552,33 +547,22 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
     public void onNestedPreScroll(@NonNull View target, int dx, int dy, @Nullable int[] consumed, int type) {
         boolean isWebViewBottom = !canWebViewScrollDown();
         boolean isCenter = isParentCenter();
-        if (dy > 0) {
-            if(getScrollY() <= DEFAULT_DISTANCE_PARENT_SCROLL) {
-                Log.d("fox--->", "dy1:" + dy + " scrollY:" + getScrollY() + " Height:" + DEFAULT_DISTANCE_PARENT_SCROLL);
-                scrollBy(0, dy);
-                if (consumed != null) {
-                    consumed[1] = dy;
-                }
-            } else if(isWebViewBottom && getScrollY() < getInnerScrollHeight()) {
-                Log.d("fox--->", "dy2:" + dy);
-                // when web view reach bottom, continue scroll down parent container
-                scrollBy(0, dy);
-                if (consumed != null) {
-                    consumed[1] = dy;
-                }
+        if (dy > 0 && isWebViewBottom && getScrollY() < getInnerScrollHeight()) {
+            // when web view reach bottom, continue scroll down parent container
+            scrollBy(0, dy);
+            if (consumed != null) {
+                consumed[1] = dy;
             }
         } else if (dy < 0 && isCenter) {
-            Log.d("fox--->", "dy3:" + dy);
             // when recycler reach top, continue scroll up parent container
             scrollBy(0, dy);
             if (consumed != null) {
                 consumed[1] = dy;
             }
         }
-//        if (isCenter && !isWebViewBottom) {
-//            Log.d("fox--->", "dy4:" + dy);
-//            // when occur some exception situation
-//            scrollToWebViewBottom();
-//        }
+        if (isCenter && !isWebViewBottom) {
+            // when occur some exception situation
+            scrollToWebViewBottom();
+        }
     }
 }
