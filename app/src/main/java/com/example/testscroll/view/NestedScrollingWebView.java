@@ -94,6 +94,12 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
             mWebViewContentHeight = (int) (getContentHeight() * DENSITY);
         }
 
+        if (!canScroll) {
+            // 有 ReadMore 的时候只能滚动 2 屏
+            mWebViewContentHeight = (int) (computeVerticalScrollExtent() * 2);
+        } else {
+            mWebViewContentHeight = (int) (getContentHeight() * DENSITY);
+        }
         return mWebViewContentHeight;
     }
 
@@ -204,6 +210,9 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
 
     @Override
     public void scrollTo(int x, int y) {
+        // update max scrollY for read more scroll
+        mMaxScrollY = getWebViewContentHeight() - getHeight();
+
         if (y < 0) {
             y = 0;
         }
@@ -227,6 +236,21 @@ public class NestedScrollingWebView extends WebView implements NestedScrollingCh
             };
         }
         return mChildHelper;
+    }
+
+    @Override
+    public int computeVerticalScrollRange() {
+        return super.computeVerticalScrollRange();
+    }
+
+    @Override
+    public int computeVerticalScrollOffset() {
+        return super.computeVerticalScrollOffset();
+    }
+
+    @Override
+    public int computeVerticalScrollExtent() {
+        return super.computeVerticalScrollExtent();
     }
 
     private void initOrResetVelocityTracker() {
