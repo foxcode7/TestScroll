@@ -109,7 +109,7 @@ public class CollapsibleWebView extends WebView {
         }
     }
 
-    public int getWebViewContentHeight() {
+    protected int getWebViewContentHeight() {
         if (mWebViewContentHeight == 0) {
             mWebViewContentHeight = mJsCallWebViewContentHeight;
         }
@@ -127,6 +127,6 @@ public class CollapsibleWebView extends WebView {
     }
 
     protected void onReadMoreClick() {
-
+        // do nothing
     }
 }

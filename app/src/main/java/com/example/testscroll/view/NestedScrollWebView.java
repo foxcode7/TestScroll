@@ -255,7 +255,7 @@ public class NestedScrollWebView extends CollapsibleWebView implements NestedScr
 
     private boolean isViewPagerHorizontalGestureEffect() {
         if (mPagerParentView == null) {
-            initWebViewParent();
+            initViewPagerParent();
         }
         if (mPagerParentView != null) {
             return mPagerParentView.isHorizontalGestureEffect();
@@ -265,7 +265,7 @@ public class NestedScrollWebView extends CollapsibleWebView implements NestedScr
 
     private void setViewPagerHorizontalGestureEffect(boolean isEffect) {
         if (mPagerParentView == null) {
-            initWebViewParent();
+            initViewPagerParent();
         }
         if (mPagerParentView != null) {
             mPagerParentView.setHorizontalGestureEffect(isEffect);

@@ -66,13 +66,9 @@ public class NestedScrollWebViewPager extends ViewPager {
                 }
                 mParentView.scrollTo(0, 0);
                 currentWebView.scrollTo(0, 0);
-                Log.d("fox--->", "scroll to top");
             } else {
                 if(!currentWebView.canScrollDown()) {
-                    Log.d("fox--->", "scroll to bottom");
                     currentWebView.scrollToBottom();
-                } else {
-                    Log.d("fox--->", "scroll nothing");
                 }
             }
         }

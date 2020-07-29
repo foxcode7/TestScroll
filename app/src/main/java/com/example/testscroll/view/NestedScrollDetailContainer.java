@@ -156,9 +156,6 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                if(onYChangedListener != null) {
-                    onYChangedListener.onScrollYChanged((int)ev.getY() - lastDownY);
-                }
                 if (mVelocityTracker != null) {
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     if(onYChangedListener != null) {

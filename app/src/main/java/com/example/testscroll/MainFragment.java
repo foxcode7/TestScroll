@@ -1,14 +1,11 @@
 package com.example.testscroll;
 
-import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
-import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,7 +13,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.testscroll.util.DisplayUtils;
 import com.example.testscroll.view.NestedScrollDetailContainer;
 import com.example.testscroll.view.NestedScrollWebView;
 import com.example.testscroll.view.NestedScrollWebViewPager;
@@ -43,35 +39,10 @@ public class MainFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        final LinearLayout containerLayout = ((MainActivity)getActivity()).containerLayout;
         NestedScrollDetailContainer container = rootView.findViewById(R.id.nested_container);
-        container.setOnYChangedListener(new NestedScrollDetailContainer.OnYChangedListener() {
-            @Override
-            public void onScrollYChanged(int yDiff) {
-                if(Math.abs(yDiff) > DisplayUtils.dp2px(50) / 2) {
-                    if(yDiff > 0) {
-                        if(containerLayout.getTranslationY() == 0) return;
-                        ObjectAnimator.ofFloat(containerLayout, "translationY", -DisplayUtils.dp2px(50), 0).setDuration(200L).start();
-                    } else {
-                        if(containerLayout.getTranslationY() == -DisplayUtils.dp2px(50)) return;
-                        ObjectAnimator.ofFloat(containerLayout, "translationY", 0, -DisplayUtils.dp2px(50)).setDuration(200L).start();
-                    }
-                }
-            }
-
-            @Override
-            public void onFlingYChanged(int yVelocity) {
-                if(Math.abs(yVelocity) > 3000) {
-                    if(yVelocity > 0) {
-                        if(containerLayout.getTranslationY() == 0) return;
-                        ObjectAnimator.ofFloat(containerLayout, "translationY", -DisplayUtils.dp2px(50), 0).setDuration(200L).start();
-                    } else {
-                        if(containerLayout.getTranslationY() == -DisplayUtils.dp2px(50)) return;
-                        ObjectAnimator.ofFloat(containerLayout, "translationY", 0, -DisplayUtils.dp2px(50)).setDuration(200L).start();
-                    }
-                }
-            }
-        });
+        if(getActivity() instanceof MainActivity) {
+            container.setOnYChangedListener((MainActivity) getActivity());
+        }
 
         initViewPager();
         initRecyclerView();
