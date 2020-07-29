@@ -22,6 +22,7 @@
             <TextView
                 android:text="Title Bar"
                 android:gravity="center"
+                android:textSize="16sp"
                 android:textColor="#fff"
                 android:background="#c76"
                 android:layout_width="match_parent"
@@ -31,6 +32,7 @@
 
         <TextView
             android:text="Banner Ads"
+            android:textSize="16sp"
             android:textColor="#fff"
             android:background="#734900"
             android:gravity="center"
@@ -38,15 +40,9 @@
             android:layout_height="50dp"/>
 
         <FrameLayout
+            android:id="@+id/frame_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <FrameLayout
-                android:id="@+id/frame_layout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
-
-        </FrameLayout>
+            android:layout_height="match_parent"/>
 
     </LinearLayout>
 
@@ -66,6 +62,7 @@
         android:background="@color/colorAccent"
         android:gravity="center"
         android:text="Comment Bar"
+        android:textSize="16sp"
         android:textColor="#fff" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

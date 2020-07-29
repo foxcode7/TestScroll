@@ -7,7 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:text="Footer"
-        android:textSize="20sp"
+        android:textSize="16sp"
         android:textColor="#ffffff"
         android:gravity="center" />
 </LinearLayout>

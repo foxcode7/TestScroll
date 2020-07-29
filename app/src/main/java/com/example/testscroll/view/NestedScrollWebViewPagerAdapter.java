@@ -1,37 +1,39 @@
-package com.example.testscroll;
+package com.example.testscroll.view;
 
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author foxcoder
  * @since 2020-07-23
  */
-public class WebViewPagerAdapter extends PagerAdapter {
-    List<WebView> webViews = new ArrayList<>();
+public class NestedScrollWebViewPagerAdapter extends PagerAdapter {
+    List<NestedScrollWebView> nestedScrollWebViews;
 
-    public WebViewPagerAdapter(List<WebView> webViews) {
-        this.webViews = webViews;
+    public NestedScrollWebViewPagerAdapter(List<NestedScrollWebView> nestedScrollWebViews) {
+        this.nestedScrollWebViews = nestedScrollWebViews;
+    }
+
+    public List<NestedScrollWebView> getNestedScrollWebViews() {
+        return nestedScrollWebViews;
     }
 
     @NonNull
     @Override
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
-        WebView webView = webViews.get(position);
+        NestedScrollWebView webView = nestedScrollWebViews.get(position);
         container.addView(webView);
         return webView;
     }
 
     @Override
     public int getCount() {
-        return webViews.size();
+        return nestedScrollWebViews.size();
     }
 
     @Override

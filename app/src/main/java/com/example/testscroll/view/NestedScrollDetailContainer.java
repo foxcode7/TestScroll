@@ -21,8 +21,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NestedScrollingDetailContainer extends ViewGroup implements NestedScrollingParent2 {
-    public static final String TAG_NESTED_SCROLL_WEB_VIEW = "nested_scroll_web_view";
+public class NestedScrollDetailContainer extends ViewGroup implements NestedScrollingParent2 {
+    public static final String TAG_NESTED_SCROLL_WEB_VIEW_ONE = "nested_scroll_web_view_one";
+    public static final String TAG_NESTED_SCROLL_WEB_VIEW_TWO = "nested_scroll_web_view_two";
     public static final String TAG_NESTED_SCROLL_RECYCLER_VIEW = "nested_scroll_recycler_view";
 
     private static final int FLYING_FROM_WEBVIEW_TO_PARENT = 0;
@@ -41,7 +42,7 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
     private int mLastY;
     private int mLastMotionY;
 
-    private NestedScrollingWebView mChildWebView;
+    private NestedScrollWebView mChildWebView;
     private RecyclerView mChildRecyclerView;
 
     private NestedScrollingParentHelper mParentHelper;
@@ -60,15 +61,15 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
         this.onYChangedListener = onYChangedListener;
     }
 
-    public NestedScrollingDetailContainer(Context context) {
+    public NestedScrollDetailContainer(Context context) {
         this(context, null);
     }
 
-    public NestedScrollingDetailContainer(Context context, AttributeSet attrs) {
+    public NestedScrollDetailContainer(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public NestedScrollingDetailContainer(Context context, AttributeSet attrs, int defStyleAttr) {
+    public NestedScrollDetailContainer(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mParentHelper = new NestedScrollingParentHelper(this);
         mScroller = new Scroller(getContext());
@@ -380,8 +381,9 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
         int count = parent.getChildCount();
         for (int i = 0; i < count; i++) {
             View child = parent.getChildAt(i);
-            if (child instanceof NestedScrollingWebView && TAG_NESTED_SCROLL_WEB_VIEW.equals(child.getTag())) {
-                mChildWebView = (NestedScrollingWebView) child;
+            if (child instanceof NestedScrollWebView &&
+                    (TAG_NESTED_SCROLL_WEB_VIEW_ONE.equals(child.getTag()) || TAG_NESTED_SCROLL_WEB_VIEW_TWO.equals(child.getTag()))) {
+                mChildWebView = (NestedScrollWebView) child;
                 break;
             }
             if (child instanceof ViewGroup) {
@@ -508,7 +510,7 @@ public class NestedScrollingDetailContainer extends ViewGroup implements NestedS
 
     @Override
     public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
-        if (target instanceof NestedScrollingWebView) {
+        if (target instanceof NestedScrollWebView) {
             // when web view reach bottom, continue scroll down parent and recycler
             mCurFlyingType = FLYING_FROM_WEBVIEW_TO_PARENT;
             parentFling(velocityY);
