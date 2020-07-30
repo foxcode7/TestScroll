@@ -1,6 +1,7 @@
 package com.example.testscroll;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +17,6 @@ public class HeaderBottomAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     public static final int ITEM_TYPE_HEADER = 0;
     public static final int ITEM_TYPE_CONTENT = 1;
     public static final int ITEM_TYPE_BOTTOM = 2;
-    public String [] texts={"1", "2", "3", "4", "5", "1", "2", "3", "4", "5", "1", "2", "3", "4", "5", "1", "2", "3", "4", "5"};
     private LayoutInflater mLayoutInflater;
     private Context mContext;
     private int mHeaderCount=1;
@@ -28,7 +28,7 @@ public class HeaderBottomAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     }
 
     public int getContentItemCount(){
-        return texts.length;
+        return 50;
     }
 
     public boolean isHeaderView(int position) {
@@ -75,6 +75,7 @@ public class HeaderBottomAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        Log.d("fox--->", "onCreateViewHolder");
         if (viewType ==ITEM_TYPE_HEADER) {
             return new HeaderViewHolder(mLayoutInflater.inflate(R.layout.rv_header, parent, false));
         } else if (viewType == ITEM_TYPE_CONTENT) {
@@ -87,11 +88,11 @@ public class HeaderBottomAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        Log.d("fox--->", "onBindViewHolder");
         if (holder instanceof HeaderViewHolder) {
 
         } else if (holder instanceof ContentViewHolder) {
-            ((ContentViewHolder) holder).textView.setText(texts[position - mHeaderCount]);
-
+            ((ContentViewHolder) holder).textView.setText(String.valueOf(position - mHeaderCount));
         } else if (holder instanceof BottomViewHolder) {
 
         }
