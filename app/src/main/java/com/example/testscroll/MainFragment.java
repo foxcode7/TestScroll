@@ -1,6 +1,7 @@
 package com.example.testscroll;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,8 @@ import java.util.List;
  */
 public class MainFragment extends Fragment {
     private View rootView;
+    private RecyclerView rvList;
+    private HeaderBottomAdapter rvAdapter;
 
     @Nullable
     @Override
@@ -43,6 +46,15 @@ public class MainFragment extends Fragment {
         if(getActivity() instanceof MainActivity) {
             container.setOnYChangedListener((MainActivity) getActivity());
         }
+        container.setOnWebReachBottomListener(new NestedScrollDetailContainer.OnWebReachBottomListener() {
+            @Override
+            public void hasReachedBottom() {
+                Log.d("fox--->", "onReachToBottom");
+                if(rvList.getAdapter() == null) {
+                    rvList.setAdapter(rvAdapter);
+                }
+            }
+        });
 
         initViewPager();
         initRecyclerView();
@@ -73,10 +85,10 @@ public class MainFragment extends Fragment {
     }
 
     private void initRecyclerView() {
-        RecyclerView rvList = rootView.findViewById(R.id.rv_list);
+        rvList = rootView.findViewById(R.id.rv_list);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         rvList.setLayoutManager(layoutManager);
-        HeaderBottomAdapter rvAdapter = new HeaderBottomAdapter(getActivity());
-        rvList.setAdapter(rvAdapter);
+        rvAdapter = new HeaderBottomAdapter(getActivity());
+        rvList.setAdapter(null);
     }
 }

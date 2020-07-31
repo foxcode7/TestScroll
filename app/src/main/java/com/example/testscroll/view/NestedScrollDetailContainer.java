@@ -33,6 +33,7 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
     private boolean mIsSetFlying;
     private boolean mIsRvFlyingDown;
     private boolean mIsBeingDragged;
+    private boolean mIsWebReachBottom;
 
     private int mMaximumVelocity;
     private int mCurFlyingType;
@@ -50,6 +51,7 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
     private VelocityTracker mVelocityTracker;
 
     private OnYChangedListener onYChangedListener;
+    private OnWebReachBottomListener onWebReachBottomListener;
 
     public interface OnYChangedListener {
         void onScrollYChanged(int yDiff);
@@ -57,8 +59,16 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
         void onFlingYChanged(int yVelocity);
     }
 
+    public interface OnWebReachBottomListener {
+        void hasReachedBottom();
+    }
+
     public void setOnYChangedListener(OnYChangedListener onYChangedListener) {
         this.onYChangedListener = onYChangedListener;
+    }
+
+    public void setOnWebReachBottomListener(OnWebReachBottomListener onWebReachBottomListener) {
+        this.onWebReachBottomListener = onWebReachBottomListener;
     }
 
     public NestedScrollDetailContainer(Context context) {
@@ -148,8 +158,13 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
                 dealWithError();
                 break;
             case MotionEvent.ACTION_MOVE:
+                int yDiff = (int)ev.getY() - lastDownY;
                 if(onYChangedListener != null) {
-                    onYChangedListener.onScrollYChanged((int)ev.getY() - lastDownY);
+                    onYChangedListener.onScrollYChanged(yDiff);
+                }
+                if(!mChildWebView.canScrollDown() && yDiff < 0 && !mIsWebReachBottom) {
+                    onWebReachBottomListener.hasReachedBottom();
+                    mIsWebReachBottom = true;
                 }
                 initVelocityTrackerIfNotExists();
                 mVelocityTracker.addMovement(ev);
@@ -302,6 +317,10 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
                 case FLYING_FROM_WEBVIEW_TO_PARENT:
                     if (mIsRvFlyingDown) {// recycler deal self's fling
                         break;
+                    }
+                    if(!mChildWebView.canScrollDown() && !mIsWebReachBottom) {
+                        onWebReachBottomListener.hasReachedBottom();
+                        mIsWebReachBottom = true;
                     }
                     scrollTo(0, currY);
                     invalidate();
