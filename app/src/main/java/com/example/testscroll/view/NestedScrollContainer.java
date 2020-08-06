@@ -2,6 +2,7 @@ package com.example.testscroll.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -21,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NestedScrollDetailContainer extends ViewGroup implements NestedScrollingParent2 {
+public class NestedScrollContainer extends ViewGroup implements NestedScrollingParent2 {
     public static final String TAG_NESTED_SCROLL_WEB_VIEW_ONE = "nested_scroll_web_view_one";
     public static final String TAG_NESTED_SCROLL_WEB_VIEW_TWO = "nested_scroll_web_view_two";
     public static final String TAG_NESTED_SCROLL_RECYCLER_VIEW = "nested_scroll_recycler_view";
@@ -34,6 +35,7 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
     private boolean mIsRvFlyingDown;
     private boolean mIsBeingDragged;
     private boolean mIsWebReachBottom;
+    private boolean mIsRvReachTop;
 
     private int mMaximumVelocity;
     private int mCurFlyingType;
@@ -51,7 +53,7 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
     private VelocityTracker mVelocityTracker;
 
     private OnYChangedListener onYChangedListener;
-    private OnWebReachBottomListener onWebReachBottomListener;
+    private OnReachedListener onReachedListener;
 
     public interface OnYChangedListener {
         void onScrollYChanged(int yDiff);
@@ -59,27 +61,35 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
         void onFlingYChanged(int yVelocity);
     }
 
-    public interface OnWebReachBottomListener {
-        void hasReachedBottom();
+    public interface OnReachedListener {
+        /**
+         * first time reach to web bottom
+         */
+        void hasWebReachedBottom();
+        /**
+         * first time reach to recycler view item (just items that init in recycler view)
+         * index == 0 means reached rv top
+         */
+        void hasRvReachedItem(int index);
     }
 
     public void setOnYChangedListener(OnYChangedListener onYChangedListener) {
         this.onYChangedListener = onYChangedListener;
     }
 
-    public void setOnWebReachBottomListener(OnWebReachBottomListener onWebReachBottomListener) {
-        this.onWebReachBottomListener = onWebReachBottomListener;
+    public void setOnReachedListener(OnReachedListener onReachedListener) {
+        this.onReachedListener = onReachedListener;
     }
 
-    public NestedScrollDetailContainer(Context context) {
+    public NestedScrollContainer(Context context) {
         this(context, null);
     }
 
-    public NestedScrollDetailContainer(Context context, AttributeSet attrs) {
+    public NestedScrollContainer(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public NestedScrollDetailContainer(Context context, AttributeSet attrs, int defStyleAttr) {
+    public NestedScrollContainer(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mParentHelper = new NestedScrollingParentHelper(this);
         mScroller = new Scroller(getContext());
@@ -162,10 +172,8 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
                 if(onYChangedListener != null) {
                     onYChangedListener.onScrollYChanged(yDiff);
                 }
-                if(!mChildWebView.canScrollDown() && yDiff < 0 && !mIsWebReachBottom) {
-                    onWebReachBottomListener.hasReachedBottom();
-                    mIsWebReachBottom = true;
-                }
+                monitorWebBottomReach();
+                monitorRvItemReach();
                 initVelocityTrackerIfNotExists();
                 mVelocityTracker.addMovement(ev);
                 break;
@@ -188,6 +196,65 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
         }
 
         return super.dispatchTouchEvent(ev);
+    }
+
+    private void monitorWebBottomReach() {
+        if(!mChildWebView.canScrollDown() && !mIsWebReachBottom) {
+            if(onReachedListener != null) {
+                onReachedListener.hasWebReachedBottom();
+            }
+            mIsWebReachBottom = true;
+        }
+    }
+
+    private int mRvTopY;
+    private int[] mRvItemTops;
+    private int mLastReachedRvItem;
+
+    private void monitorRvItemReach() {
+        // reach rv top
+        if(mChildRecyclerView.getTop() <= getHeight() + getScrollY() && !mIsRvReachTop) {
+            mRvTopY = getScrollY();
+            if(onReachedListener != null) {
+                onReachedListener.hasRvReachedItem(0);
+            }
+            RecyclerView.LayoutManager manager = mChildRecyclerView.getLayoutManager();
+            if(manager != null) {
+                mRvItemTops = new int[manager.getChildCount()];
+                for(int i = 0; i < mRvItemTops.length; i++) {
+                    mRvItemTops[i] = manager.getChildAt(i).getTop();
+                }
+            }
+            mIsRvReachTop = true;
+        }
+
+        // reach rv other items
+        if(mRvTopY <= 0 || getScrollY() - mRvTopY <= 0 || getScrollY() >= getInnerScrollHeight()) return;
+
+        int rvDistance = getScrollY() - mRvTopY;
+        int lastItem = mLastReachedRvItem;
+        for(int i = lastItem + 1; i < mRvItemTops.length; i++) {
+            if(i + 1 == mRvItemTops.length) {
+                if(mRvItemTops[i] <= rvDistance) {
+                    for(int j = lastItem + 1; j <= i; j++) {
+                        if (onReachedListener != null) {
+                            onReachedListener.hasRvReachedItem(j);
+                            mLastReachedRvItem = j;
+                        }
+                    }
+                }
+                return;
+            }
+            if(mRvItemTops[i] <= rvDistance && rvDistance <= mRvItemTops[i + 1]) {
+                for(int j = lastItem + 1; j <= i; j++) {
+                    if (onReachedListener != null) {
+                        onReachedListener.hasRvReachedItem(j);
+                        mLastReachedRvItem = j;
+                    }
+                }
+                break;
+            }
+        }
     }
 
     @Override
@@ -243,16 +310,6 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
         }
 
         return mIsBeingDragged;
-    }
-
-    public void scrollToTarget(View view) {
-        if (view == null) {
-            return;
-        }
-        if (mChildWebView != null) {
-            mChildWebView.scrollToBottom();
-        }
-        scrollTo(0, view.getTop() - 100);
     }
 
     /**
@@ -318,10 +375,8 @@ public class NestedScrollDetailContainer extends ViewGroup implements NestedScro
                     if (mIsRvFlyingDown) {// recycler deal self's fling
                         break;
                     }
-                    if(!mChildWebView.canScrollDown() && !mIsWebReachBottom) {
-                        onWebReachBottomListener.hasReachedBottom();
-                        mIsWebReachBottom = true;
-                    }
+                    monitorWebBottomReach();
+                    monitorRvItemReach();
                     scrollTo(0, currY);
                     invalidate();
                     checkRvTop();

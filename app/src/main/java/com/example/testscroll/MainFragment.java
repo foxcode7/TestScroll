@@ -14,7 +14,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.testscroll.view.NestedScrollDetailContainer;
+import com.example.testscroll.util.RecyclerHelper;
+import com.example.testscroll.view.NestedScrollContainer;
 import com.example.testscroll.view.NestedScrollWebView;
 import com.example.testscroll.view.NestedScrollWebViewPager;
 import com.example.testscroll.view.NestedScrollWebViewPagerAdapter;
@@ -42,17 +43,22 @@ public class MainFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        NestedScrollDetailContainer container = rootView.findViewById(R.id.nested_container);
+        NestedScrollContainer container = rootView.findViewById(R.id.nested_container);
         if(getActivity() instanceof MainActivity) {
             container.setOnYChangedListener((MainActivity) getActivity());
         }
-        container.setOnWebReachBottomListener(new NestedScrollDetailContainer.OnWebReachBottomListener() {
+        container.setOnReachedListener(new NestedScrollContainer.OnReachedListener() {
             @Override
-            public void hasReachedBottom() {
-                Log.d("fox--->", "onReachToBottom");
+            public void hasWebReachedBottom() {
+                Log.d("fox--->", "hasWebReachedBottom");
                 if(rvList.getAdapter() == null) {
                     rvList.setAdapter(rvAdapter);
                 }
+            }
+
+            @Override
+            public void hasRvReachedItem(int index) {
+                scrollRvReached(index);
             }
         });
 
@@ -62,9 +68,9 @@ public class MainFragment extends Fragment {
 
     private List<NestedScrollWebView> initWebViews() {
         List<NestedScrollWebView> webViews = new ArrayList<>();
-        webViews.add(createWebView(NestedScrollDetailContainer.TAG_NESTED_SCROLL_WEB_VIEW_ONE,
+        webViews.add(createWebView(NestedScrollContainer.TAG_NESTED_SCROLL_WEB_VIEW_ONE,
                 "http://www.wbiw.com/2020/05/13/bedford-man-arrested-after-traffic-stop/"));
-        webViews.add(createWebView(NestedScrollDetailContainer.TAG_NESTED_SCROLL_WEB_VIEW_TWO,
+        webViews.add(createWebView(NestedScrollContainer.TAG_NESTED_SCROLL_WEB_VIEW_TWO,
                 "http://www.wbiw.com/2020/05/13/bedford-man-arrested-after-traffic-stop/"));
         return webViews;
     }
@@ -90,5 +96,22 @@ public class MainFragment extends Fragment {
         rvList.setLayoutManager(layoutManager);
         rvAdapter = new HeaderBottomAdapter(getActivity());
         rvList.setAdapter(null);
+
+        RecyclerHelper helper=new RecyclerHelper();
+
+        helper.setRecyclerScrollListener(rvList);
+        helper.setOnReachedListener(new RecyclerHelper.OnReachedListener() {
+            @Override
+            public void hasRvReachedItem(int index) {
+                scrollRvReached(index);
+            }
+        });
+    }
+
+    /**
+     * todo Jinseok load d2d ads here
+     */
+    private void scrollRvReached(int position) {
+        Log.d("fox--->","hasRvReachedItem " + position);
     }
 }

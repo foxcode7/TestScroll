@@ -9,9 +9,9 @@ import android.os.Bundle;
 import android.widget.LinearLayout;
 
 import com.example.testscroll.util.DisplayUtils;
-import com.example.testscroll.view.NestedScrollDetailContainer;
+import com.example.testscroll.view.NestedScrollContainer;
 
-public class MainActivity extends AppCompatActivity implements NestedScrollDetailContainer.OnYChangedListener {
+public class MainActivity extends AppCompatActivity implements NestedScrollContainer.OnYChangedListener {
     public LinearLayout containerLayout;
     private boolean hasAnimatorStarted;
 

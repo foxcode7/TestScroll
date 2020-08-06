@@ -14,7 +14,7 @@ import com.example.testscroll.ContentGestureDetector;
  * @since 2020-07-23
  */
 public class NestedScrollWebViewPager extends ViewPager {
-    private NestedScrollDetailContainer mParentView;
+    private NestedScrollContainer mParentView;
     private ContentGestureDetector detector;
 
     private boolean isHorizontalGestureEffect = false;
@@ -79,8 +79,8 @@ public class NestedScrollWebViewPager extends ViewPager {
         }
         View parent = (View) getParent();
         while (parent != null) {
-            if (parent instanceof NestedScrollDetailContainer) {
-                this.mParentView = (NestedScrollDetailContainer) parent;
+            if (parent instanceof NestedScrollContainer) {
+                this.mParentView = (NestedScrollContainer) parent;
                 break;
             } else {
                 parent = (View) parent.getParent();

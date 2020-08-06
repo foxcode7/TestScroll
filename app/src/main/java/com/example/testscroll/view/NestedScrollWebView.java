@@ -28,7 +28,7 @@ public class NestedScrollWebView extends CollapsibleWebView implements NestedScr
     private final int[] mScrollConsumed = new int[2];
 
     private NestedScrollingChildHelper mChildHelper;
-    private NestedScrollDetailContainer mParentView;
+    private NestedScrollContainer mParentView;
     private NestedScrollWebViewPager mPagerParentView;
     private Scroller mScroller;
     private VelocityTracker mVelocityTracker;
@@ -229,8 +229,8 @@ public class NestedScrollWebView extends CollapsibleWebView implements NestedScr
         }
         View parent = (View) getParent();
         while (parent != null) {
-            if (parent instanceof NestedScrollDetailContainer) {
-                this.mParentView = (NestedScrollDetailContainer) parent;
+            if (parent instanceof NestedScrollContainer) {
+                this.mParentView = (NestedScrollContainer) parent;
                 break;
             } else {
                 parent = (View) parent.getParent();
