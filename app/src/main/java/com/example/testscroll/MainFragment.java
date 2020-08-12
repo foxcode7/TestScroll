@@ -108,9 +108,6 @@ public class MainFragment extends Fragment {
         });
     }
 
-    /**
-     * todo Jinseok load d2d ads here
-     */
     private void scrollRvReached(int position) {
         Log.d("fox--->","hasRvReachedItem " + position);
     }

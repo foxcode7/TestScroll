@@ -1,6 +1,7 @@
 package com.example.testscroll;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -8,18 +9,27 @@ import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.widget.LinearLayout;
 
-import com.example.testscroll.util.DisplayUtils;
 import com.example.testscroll.view.NestedScrollContainer;
 
 public class MainActivity extends AppCompatActivity implements NestedScrollContainer.OnYChangedListener {
     public LinearLayout containerLayout;
+    public Toolbar toolbar;
+
     private boolean hasAnimatorStarted;
+    private int toolbarHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         containerLayout = findViewById(R.id.container_layout);
+        toolbar = findViewById(R.id.toolbar);
+        toolbar.post(new Runnable() {
+            @Override
+            public void run() {
+                toolbarHeight = toolbar.getHeight();
+            }
+        });
 
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.frame_layout, new MainFragment(), "")
@@ -28,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements NestedScrollConta
 
     @Override
     public void onScrollYChanged(int yDiff) {
-        useThresholdAndDirectionChangeTitleBar(yDiff, DisplayUtils.dp2px(50) / 2);
+        useThresholdAndDirectionChangeTitleBar(yDiff, toolbarHeight / 2);
     }
 
     @Override
@@ -39,9 +49,9 @@ public class MainActivity extends AppCompatActivity implements NestedScrollConta
     private void useThresholdAndDirectionChangeTitleBar(int value, int threshold) {
         if(Math.abs(value) > threshold) {
             if(value > 0) {
-                dealAnimatorOfTitleBar(-DisplayUtils.dp2px(50), 0);
+                dealAnimatorOfTitleBar(-toolbarHeight, 0);
             } else {
-                dealAnimatorOfTitleBar(0, -DisplayUtils.dp2px(50));
+                dealAnimatorOfTitleBar(0, -toolbarHeight);
             }
         }
     }
