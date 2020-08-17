@@ -92,6 +92,12 @@ public class MainFragment extends Fragment {
 
     private void initRecyclerView() {
         rvList = rootView.findViewById(R.id.rv_list);
+        rvList.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("fox--->", rvList.getHeight() + "");
+            }
+        });
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         rvList.setLayoutManager(layoutManager);
         rvAdapter = new HeaderBottomAdapter(getActivity());

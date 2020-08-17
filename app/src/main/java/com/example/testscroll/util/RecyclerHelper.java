@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 public class RecyclerHelper {
     private int lastStart = -1;
     private int lastEnd;
+    private int lastMaxEnd;
 
     private OnReachedListener onReachedListener;
 
@@ -22,25 +23,23 @@ public class RecyclerHelper {
     }
 
     private void dealScrollEvent(int firstVisible, int lastVisible) {
-        int visibleItemCount = lastVisible - firstVisible;
-        if (visibleItemCount > 0) {
-            if (lastStart == -1) {
+        if (lastStart == -1) {
+            lastStart = firstVisible;
+            lastEnd = lastVisible;
+        } else {
+            if (firstVisible != lastStart) {
                 lastStart = firstVisible;
-                lastEnd = lastVisible;
-            } else {
-                if (firstVisible != lastStart) {
-                    lastStart = firstVisible;
-                }
-                if (lastVisible != lastEnd) {
-                    if (lastVisible > lastEnd) {// scroll up
-                        for (int i = lastEnd; i < lastVisible; i++) {
-                            if (onReachedListener !=null){
-                                onReachedListener.hasRvReachedItem(i + 1);
-                            }
+            }
+            if (lastVisible != lastEnd) {
+                if (lastVisible > lastEnd) {// scroll up
+                    for (int i = lastEnd; i < lastVisible; i++) {
+                        if (onReachedListener !=null && lastMaxEnd < lastVisible){ // only callback new item each time
+                            onReachedListener.hasRvReachedItem(i + 1);
                         }
                     }
-                    lastEnd = lastVisible;
                 }
+                lastEnd = lastVisible;
+                lastMaxEnd = Math.max(lastMaxEnd, lastEnd);
             }
         }
     }
@@ -62,7 +61,7 @@ public class RecyclerHelper {
                 if (lastVisible == 0) {
                     visibleItemCount = 0;
                 }
-                if (visibleItemCount != 0) {
+                if (visibleItemCount > 0) {
                     dealScrollEvent(firstVisible, lastVisible);
                 }
             }

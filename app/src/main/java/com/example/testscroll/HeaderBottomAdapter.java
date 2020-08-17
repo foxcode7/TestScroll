@@ -75,7 +75,7 @@ public class HeaderBottomAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-//        Log.d("fox--->", "onCreateViewHolder");
+        Log.d("fox--->", "onCreateViewHolder");
         if (viewType ==ITEM_TYPE_HEADER) {
             return new HeaderViewHolder(mLayoutInflater.inflate(R.layout.rv_header, parent, false));
         } else if (viewType == ITEM_TYPE_CONTENT) {
@@ -88,7 +88,7 @@ public class HeaderBottomAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-//        Log.d("fox--->", "onBindViewHolder");
+        Log.d("fox--->", "onBindViewHolder");
         if (holder instanceof HeaderViewHolder) {
 
         } else if (holder instanceof ContentViewHolder) {

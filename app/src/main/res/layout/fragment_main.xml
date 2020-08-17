@@ -22,7 +22,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_list"
         android:layout_width="match_parent"
-        android:layout_height="800dp"
+        android:layout_height="match_parent"
         android:tag="nested_scroll_recycler_view" />
 
 </com.example.testscroll.view.NestedScrollContainer>
